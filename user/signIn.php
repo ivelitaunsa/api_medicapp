@@ -52,15 +52,15 @@ try {
         $check_usuario = $stmt->fetch();
         if (password_verify($contrasena, $check_usuario['contrasena'])) {
             // Actualizando el estado de autenticación
-            $updateStmt = $con->prepare("UPDATE USUARIO SET esAutenticado = 1 WHERE idUsuario = :idUsuario");
-            $updateStmt->bindParam(':idUsuario', $check_usuario['idUsuario']);
+            $updateStmt = $con->prepare("UPDATE USUARIO SET esAutenticado = 1 WHERE codigoUsuario = :codigoUsuario");
+            $updateStmt->bindParam(':codigoUsuario', $check_usuario['codigoUsuario']);
             $updateStmt->execute();
 
             // Verificando si la actualización fue exitosa
             if ($updateStmt->rowCount() > 0) {
                 // Actualizando el valor de esAutenticado en el array antes de enviar la respuesta
                 $check_usuario['esAutenticado'] = 1;
-                echo json_encode($check_usuario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+                echo json_encode($check_usuario->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
             } else {
                 echo json_encode(['error' => ['message' => 'Error al actualizar el estado de autenticación']]);
             }

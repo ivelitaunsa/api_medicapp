@@ -68,7 +68,7 @@ try {
     $guardar_usuario->execute($marcadores);
 
     if ($guardar_usuario->rowCount() == 1) {
-        echo json_encode($guardar_usuario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        echo json_encode($guardar_usuario->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
     } else {
         echo json_encode(['error' => ['message' => 'Error al guardar usuario']]);
     }
