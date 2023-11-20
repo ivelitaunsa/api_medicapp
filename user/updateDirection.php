@@ -10,10 +10,12 @@ $direccion = limpiar_cadena($_POST['direccion']);
 if(!empty($direccion)) {
     try {
         $actualizar_direccion = $con->query("UPDATE USUARIO SET direccion = '$direccion' WHERE codigoUsuario = $codigoUsuario");
-        if ($actualizar_direccion->rowCount()==1) {
-            echo json_encode($cerrar_sesion->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        if ($actualizar_direccion->rowCount() == 1) {
+            $actualizar_usuario = $con->query("SELECT * FROM USUARIO WHERE codigoUsuario = '$codigoUsuario'");
+    
+            echo json_encode($actualizar_usuario->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
         } else {
-            echo json_encode(['error' => ['message' => 'No se pudo actualizar la direccion']]);
+            echo json_encode(['error' => ['message' => 'Error al seleccionar registro actualizado']]);
         }
     } catch (PDOException $e) {
         echo json_encode(['error' => ['message' => 'Error en la base de datos']]);

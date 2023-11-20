@@ -20,7 +20,7 @@ if (verificar_datos("[a-zA-Z0-9]{4,255}", $nombreUsuario)) {
 }
 
 // Verificar formato de contrasena
-if (verificar_datos("[a-zA-Z0-9!@#$%&/()=+?[]~-^]{4,100}", $contrasena)) {
+if (verificar_datos("[a-zA-Z0-9!@#$%^&*()_+-=?]{4,100}", $contrasena)) {
     echo json_encode(['error' => ['message' => 'Formato de contraseña incorrecto']]);
     exit();
 }
@@ -67,8 +67,12 @@ try {
     ];
     $guardar_usuario->execute($marcadores);
 
+    // Después de realizar el INSERT
     if ($guardar_usuario->rowCount() == 1) {
-        echo json_encode($guardar_usuario->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        $nuevaConsulta = $con->query("SELECT * FROM USUARIO WHERE nombreUsuario = '$nombreUsuario'");
+        $nuevoUsuario = $nuevaConsulta->fetch(PDO::FETCH_ASSOC);
+
+        echo json_encode($nuevoUsuario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
     } else {
         echo json_encode(['error' => ['message' => 'Error al guardar usuario']]);
     }
@@ -76,6 +80,6 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['error' => ['message' => 'Error en la base de datos']]);
 } finally {
-    $guardar_usuario=null;
-    $con=null;
+    $guardar_usuario = null;
+    $con = null;
 }

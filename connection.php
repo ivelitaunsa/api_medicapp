@@ -1,5 +1,5 @@
 <?php
-
+header('Content-Type: application/json');
 $dsn = "mysql:host=localhost;dbname=app_medica";
 $user = "root";
 $pass = "ifbva2002";
@@ -20,7 +20,7 @@ try {
 function verificar_datos($filtro, $cadena)
 {
     // Si coincide se devuelve falso y no pasa nada
-    if (preg_match("/^" . $filtro . "$/", $cadena)) {
+    if (preg_match(".^" . $filtro . "$.", $cadena)) {
         return false;
     } else {
         return true;
