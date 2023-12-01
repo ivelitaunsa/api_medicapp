@@ -16,15 +16,8 @@ if ($nombreProducto == "" || $marca == "" || $descripcion == "" || $precio == ""
     exit();
 }
 
-if ($_FILES == null) {
-    echo json_encode(['error' => ['message' => 'No ha subido una imagen']]);
-    exit();
-}
-
-if (mime_content_type($_FILES['imagen']['tmp_name']) != "image/jpeg" && mime_content_type($_FILES['fichero']['tmp_name']) != "image/png") {
-    echo json_encode(['error' => ['message' => 'Tipo de archivos no soportado']]);
-    exit();
-}
+// Verificar si se subió una nueva imagen
+$imagenSubida = !empty($_FILES['imagen']['tmp_name']);
 
 // Ruta donde se guardarán las imágenes
 $directorioDestino = 'images/';
@@ -37,21 +30,21 @@ $obtenerRutaImagenAnterior->execute();
 if ($obtenerRutaImagenAnterior->rowCount() > 0) {
     $rutaImagenAnterior = $obtenerRutaImagenAnterior->fetchColumn();
 
-    // Eliminar la imagen anterior
-    if (file_exists($rutaImagenAnterior)) {
+    // Eliminar la imagen anterior solo si se subió una nueva imagen
+    if ($imagenSubida && file_exists($rutaImagenAnterior)) {
         unlink($rutaImagenAnterior);
     }
 }
 
-// Nombre del archivo
-$nombreArchivo = renombrar_fotos($_FILES['imagen']['name']);
+if ($imagenSubida) {
+    // Nombre del archivo
+    $nombreArchivo = renombrar_fotos($_FILES['imagen']['name']);
 
-// Ruta completa del archivo
-$rutaCompleta = $directorioDestino . $nombreArchivo;
+    // Ruta completa del archivo
+    $rutaCompleta = $directorioDestino . $nombreArchivo;
 
-// Mover la nueva imagen al directorio destino
-if (move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
-    try {
+    // Mover la nueva imagen al directorio destino
+    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
         // Actualizar los detalles del producto con la nueva imagen
         $actualizarProducto = $con->prepare("UPDATE PRODUCTO SET nombreProducto = :nombreProducto, descripcion = :descripcion, precio = :precio, cantidadStock = :cantidadStock, imagen = :imagen, marca = :marca, codigoCategoria = :codigoCategoria WHERE codigoProducto = :codigoProducto");
 
@@ -76,9 +69,36 @@ if (move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaCompleta)) {
         } else {
             echo json_encode(['error' => ['message' => 'Error al actualizar producto']]);
         }
+    } else {
+        echo json_encode(['error' => ['message' => 'Imagen no pudo ser registrada']]);
+    }
+} else {
+    // No se ha subido una nueva imagen, mantener la ruta actual
+    try {
+        // Actualizar los detalles del producto sin cambiar la imagen
+        $actualizarProducto = $con->prepare("UPDATE PRODUCTO SET nombreProducto = :nombreProducto, descripcion = :descripcion, precio = :precio, cantidadStock = :cantidadStock, marca = :marca, codigoCategoria = :codigoCategoria WHERE codigoProducto = :codigoProducto");
+
+        $marcadores = [
+            ":nombreProducto" => $nombreProducto,
+            ":descripcion" => $descripcion,
+            ":precio" => $precio,
+            ":cantidadStock" => $cantidadStock,
+            ":marca" => $marca,
+            ":codigoCategoria" => $codigoCategoria,
+            ":codigoProducto" => $codigoProducto,
+        ];
+
+        $actualizarProducto->execute($marcadores);
+
+        if ($actualizarProducto->rowCount() == 1) {
+            $nuevaConsulta = $con->query("SELECT * FROM PRODUCTO WHERE codigoProducto = $codigoProducto");
+            $productoActualizado = $nuevaConsulta->fetch(PDO::FETCH_ASSOC);
+
+            echo json_encode($productoActualizado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        } else {
+            echo json_encode(['error' => ['message' => 'No se ha cambiado ningun campo']]);
+        }
     } catch (PDOException $e) {
         echo json_encode(['error' => ['message' => 'Error en la base de datos']]);
     }
-} else {
-    echo json_encode(['error' => ['message' => 'Imagen no pudo ser registrada']]);
 }
