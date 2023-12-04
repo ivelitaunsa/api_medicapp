@@ -61,6 +61,7 @@ try {
         ":codigoUsuario" => $codigoUsuario,
 
     ];
+    $actualizar_usuario->execute($marcadores);
 
     if ($actualizar_usuario->rowCount() == 1) {
         $actualizar_usuario = $con->query("SELECT * FROM USUARIO WHERE codigoUsuario = '$codigoUsuario'");
